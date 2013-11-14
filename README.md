@@ -20,6 +20,8 @@ your application will use these to authenticate against the ZenPayroll API.
 
 ## Using This Strategy
 
+##### Installation
+
 Add the gem to your Gemfile:
 
 ```ruby
@@ -32,6 +34,8 @@ If you need to use the latest HEAD version, you can do so with:
 gem 'omniauth-zenpayroll', :github => 'shiftdock/omniauth-zenpayroll'
 ```
 
+##### Usage
+
 Next, tell OmniAuth about this provider. For a Rails app, your `config/initializers/omniauth.rb` file should look like this:
 
 ```ruby
@@ -42,14 +46,34 @@ end
 
 Replace `CLIENT_ID` and `CLIENT_SECRET` with the appropriate values you obtained from ZenPayroll earlier.
 
+##### Configuration: The Redirect URI
+
 If you need to override the Redirect URI (i.e. if yours deviates from the default) you can do so by setting it as the
 `callback_url` in an `authorize_params` options hash. 
 
 ```ruby
 Rails.application.config.middleware.user OmniAuth:Builder do
-  provider :zenpayroll, "CLIENT_ID", "CLIENT_SECRET", :authorize_params => {:callback_url => '/my/app/callback/url'}
+  provider :zenpayroll, "CLIENT_ID", "CLIENT_SECRET", 
+           :authorize_params => {:callback_url => '/my/app/callback/url'}
 end
 ```
+
+##### Configuration: Live vs. Demo
+
+ZenPayroll provide a demo site at `zenpayroll-demo.com` for all testing. You'll usually want every environment but 
+the production environment to use this API instead of the live one. The `setup` option allows you to use a `lambda` to
+pick which API you want based on the Rails environment:
+
+```ruby
+Rails.application.config.middleware.user OmniAuth:Builder do
+  provider :zenpayroll, "CLIENT_ID", "CLIENT_SECRET", 
+           :authorize_params => {:callback_url => '/my/app/callback/url'},
+           :setup => lambda { |env| env['omniauth.strategy'].options[:client_options][:site] = Rails.env.production? ? 'https://zenpayroll.com/' : 'https://zenpayroll-demo.com/' }
+end
+```
+
+Of course you could use anything; e.g. a global configuration file or environment variables, but this is probably the
+most common use case.
 
 #### UID Gotcha
 
